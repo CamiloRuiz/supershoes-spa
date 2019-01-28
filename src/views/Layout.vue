@@ -38,8 +38,8 @@
     <v-content>
       <router-view/>
     </v-content>
-    <v-footer :fixed="fixed" app>
-      <span class="ml-2"> Created by Cristian Ruiz &copy; 2019</span>
+    <v-footer :fixed="fixed" height="50" app>
+      <span class="ml-3">Created by Cristian Ruiz &copy; 2019</span>
     </v-footer>
   </v-app>
 </template>
