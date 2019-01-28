@@ -1,10 +1,10 @@
 <template>
   <v-flex xs12>
     <v-toolbar>
-      <v-toolbar-title class="mr-2">Stores</v-toolbar-title>
+      <v-toolbar-title class="mr-2">Articles</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-dialog v-model="dialog" max-width="500px">
-        <v-btn slot="activator" color="primary" dark class="mb-2">New Store</v-btn>
+        <v-btn slot="activator" color="primary" dark class="mb-2">New Article</v-btn>
         <v-card>
           <v-card-title>
             <span class="headline">{{ formTitle }}</span>
@@ -15,20 +15,52 @@
               <v-layout wrap>
                 <v-flex xs12>
                   <v-form
-                    ref="storeForm"
+                    ref="articleForm"
                     v-model="valid"
                     lazy-validation
                   >
+                    <v-select
+                      v-model="editedArticle.store_id"
+                      :items="stores"
+                      item-text="name"
+                      item-value="id"
+                      :rules="[v => !!v || 'The store is required']"
+                      label="Store"
+                      required
+                    ></v-select>
                     <v-text-field
-                      v-model="editedStore.name"
+                      v-model="editedArticle.name"
                       label="Name"
                       :rules="[v => !!v || 'Name is required']"
                       required
                     ></v-text-field>
+                    <v-textarea
+                      v-model="editedArticle.description"
+                      label="Description"
+                      :rules="[v => !!v || 'Description is required']"
+                      required
+                      value=""
+                    ></v-textarea>
                     <v-text-field
-                      v-model="editedStore.address"
-                      label="Address"
-                      :rules="[v => !!v || 'Address is required']"
+                      v-model="editedArticle.price"
+                      label="Price"
+                      prefix="$"
+                      type="number"
+                      :rules="[v => !!v || 'Price is required']"
+                      required
+                    ></v-text-field>
+                    <v-text-field
+                      v-model="editedArticle.total_in_shelf"
+                      label="Total in shelf"
+                      type="number"
+                      :rules="[v => !!v || 'The amount of total in shelf is required']"
+                      required
+                    ></v-text-field>
+                    <v-text-field
+                      v-model="editedArticle.total_in_vault"
+                      label="Total in vault"
+                      type="number"
+                      :rules="[v => !!v || 'The amount of total in vault is required']"
                       required
                     ></v-text-field>
                   </v-form>
@@ -47,23 +79,20 @@
     </v-toolbar>
     <v-data-table
       :headers="headers"
-      :items="stores"
+      :items="articles"
       :pagination.sync="pagination"
-      :total-items="totalStores"
+      :total-items="totalArticles"
       :loading="loading"
       class="elevation-1"
     >
       <template slot="items" slot-scope="props">
         <td class="text-xs-left">{{ props.item.name }}</td>
-        <td class="text-xs-left">{{ props.item.address }}</td>
-        <td class="text-xs-center">
-          <v-icon
-            small
-            class="mr-2"
-            @click="getArticles(props.item)"
-          >
-            list
-          </v-icon>
+        <td class="text-xs-left">{{ props.item.description }}</td>
+        <td class="text-xs-right text-no-wrap">$ {{ props.item.price }}</td>
+        <td class="text-xs-right">{{ props.item.total_in_shelf }}</td>
+        <td class="text-xs-right">{{ props.item.total_in_vault }}</td>
+        <td class="text-xs-left text-no-wrap">{{ props.item.store_name }}</td>
+        <td class="text-xs-center text-no-wrap">
           <v-icon
             small
             class="mr-2"
@@ -82,7 +111,7 @@
 
       <template slot="no-data">
         <v-alert :value="no_data" color="error" icon="warning">
-          Sorry, there is not stores yet :(
+          Sorry, there is not articles yet :(
         </v-alert>
       </template>
     </v-data-table>
@@ -90,39 +119,56 @@
 </template>
 
 <script>
-  import storesService from '../../modules/stores/stores.service';
+  import storesService from '@/modules/stores/stores.service';
+  import articlesService from '@/modules/articles/articles.service';
   import { VDataTable } from 'vuetify/es5/components/VDataTable';
 
   export default {
-    name: "StoresTable",
+    name: "ArticlesTable",
     data () {
       return {
         dialog: false,
         valid: true,
-        totalStores: 0,
+        totalArticles: 0,
+        articles: [],
         stores: [],
         loading: true,
         no_data: false,
         pagination: {},
         headers: [
           { text: 'Name', align: 'left', value: 'name' },
-          { text: 'Address', align: 'left', value: 'address' },
+          { text: 'Description', align: 'left', value: 'description' },
+          { text: 'Price', align: 'right', value: 'price' },
+          { text: 'Total in Shelf', align: 'right', value: 'total_in_shelf' },
+          { text: 'Total in Vault', align: 'right', value: 'total_in_vault' },
+          { text: 'Store', align: 'left', value: 'store_name' },
           { text: '', value: '' },
         ],
         editedIndex: -1,
-        editedStore: {
+        editedArticle: {
           name: '',
-          address: ''
+          description: '',
+          price: 0,
+          total_in_shelf: 0,
+          total_in_vault: 0,
+          store_id: 0
         },
-        defaultStore: {
+        defaultArticle: {
           name: '',
-          address: ''
+          description: '',
+          price: 0,
+          total_in_shelf: 0,
+          total_in_vault: 0,
+          store_id: 0
         }
       }
     },
+    props: {
+      store: Number
+    },
     computed: {
       formTitle () {
-        return this.editedIndex === -1 ? 'New Store' : 'Edit Store'
+        return this.editedIndex === -1 ? 'New Article' : 'Edit Article'
       }
     },
     watch: {
@@ -131,21 +177,32 @@
       },
       pagination: {
         handler () {
-          this.getData();
+          let store = this.store ? this.store : 0;
+          this.getData(store);
         },
         deep: true
       }
     },
     methods: {
-      getData () {
+      getData (store) {
         this.loading = true;
 
         storesService.getStores()
           .then((resolve) => {
+            this.stores = resolve.data.stores;
+          });
+
+        let service = articlesService.getArticles();
+
+        if (store) {
+          service = storesService.getArticles(store);
+        }
+
+        service.then((resolve) => {
             if (!resolve.error){
               const { sortBy, descending, page, rowsPerPage } = this.pagination;
 
-              let items = resolve.data.stores;
+              let items = resolve.data.articles;
               const total = items.length;
 
               if (this.pagination.sortBy) {
@@ -170,8 +227,8 @@
               }
 
               this.loading = false;
-              this.stores = items;
-              this.totalStores = total;
+              this.articles = items;
+              this.totalArticles = total;
             }
           })
           .catch(() => {
@@ -179,21 +236,19 @@
             this.no_data = true;
           });
       },
-      getArticles (store) {
-        this.$router.push({name: 'articlesByStore', params: { store: store.id }});
-      },
+
       editItem (item) {
         this.editedIndex = this.stores.indexOf(item);
-        this.editedStore = Object.assign({}, item);
+        this.editedArticle = Object.assign({}, item);
         this.dialog = true;
       },
 
       deleteItem (item) {
-        const index = this.stores.indexOf(item);
-        if (confirm('Are you sure you want to delete this store?')) {
-          storesService.deleteStore(item.id)
+        const index = this.articles.indexOf(item);
+        if (confirm('Are you sure you want to delete this article?')) {
+          articlesService.deleteArticle(item.id)
             .then((resolve) => {
-              this.stores.splice(index, 1);
+              this.articles.splice(index, 1);
             });
         }
       },
@@ -201,21 +256,21 @@
       close () {
         this.dialog = false;
         setTimeout(() => {
-          this.editedStore = Object.assign({}, this.defaultStore);
+          this.editedArticle = Object.assign({}, this.defaultArticle);
           this.editedIndex = -1;
-          this.$refs.storeForm.reset();
+          this.$refs.articleForm.reset();
         }, 300);
       },
 
       save () {
-        if (this.$refs.storeForm.validate()) {
+        if (this.$refs.articleForm.validate()) {
           if (this.editedIndex > -1) {
-            storesService.updateStore(this.editedStore)
+            articlesService.updateArticle(this.editedArticle)
               .then((resolve) => {
                 this.getData();
               });
           } else {
-            storesService.saveStore(this.editedStore)
+            articlesService.saveArticle(this.editedArticle)
               .then((resolve) => {
                 this.getData();
               });

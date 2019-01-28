@@ -17,12 +17,20 @@ const appRouter = new Router({
         {
           name: 'stores',
           path: '/stores',
-          component: () => import('../views/Stores.vue')
+          component: () => import('../views/Stores')
+        },
+        {
+          name: 'articlesByStore',
+          path: '/stores/:store/articles',
+          component: () => import('../views/ArticlesByStore'),
+          props: (route) => ({
+            store: Number(route.params.store),
+          })
         },
         {
           name: 'articles',
           path: '/articles',
-          component: () => import('../views/Articles.vue')
+          component: () => import('../views/Articles')
         },
       ]
     },

@@ -12,7 +12,9 @@ import {
   VBtn,
   VIcon,
   VGrid,
+  VSelect,
   VTextField,
+  VTextarea,
   VToolbar,
   VTooltip,
   transitions
@@ -32,7 +34,9 @@ Vue.use(Vuetify, {
     VBtn,
     VIcon,
     VGrid,
+    VSelect,
     VTextField,
+    VTextarea,
     VToolbar,
     VTooltip,
     transitions
@@ -46,4 +50,4 @@ Vue.use(Vuetify, {
     success: '#4CAF50',
     warning: '#FFC107'
   },
-})
+});

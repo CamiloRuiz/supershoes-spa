@@ -1,6 +1,7 @@
 <template>
   <v-container grid-list-md text-xs-center>
-    <ArticlesTable />
+    <h1 align="left">Articles By Store</h1>
+    <ArticlesTable :store="this.store"/>
   </v-container>
 </template>
 
@@ -8,7 +9,13 @@
 import ArticlesTable from '@/components/articles/ArticlesTable';
 
 export default {
-  name: 'articles',
+  name: 'articlesByStore',
+  props: {
+    store: {
+      type: Number,
+      default: 0
+    }
+  },
   components: {
     ArticlesTable
   }
