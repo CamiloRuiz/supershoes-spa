@@ -229,6 +229,10 @@
               this.loading = false;
               this.articles = items;
               this.totalArticles = total;
+
+              if (total === 0) {
+                this.no_data = true;
+              }
             }
           })
           .catch(() => {
@@ -238,17 +242,16 @@
       },
 
       editItem (item) {
-        this.editedIndex = this.stores.indexOf(item);
+        this.editedIndex = this.articles.indexOf(item);
         this.editedArticle = Object.assign({}, item);
         this.dialog = true;
       },
 
       deleteItem (item) {
-        const index = this.articles.indexOf(item);
         if (confirm('Are you sure you want to delete this article?')) {
           articlesService.deleteArticle(item.id)
-            .then((resolve) => {
-              this.articles.splice(index, 1);
+            .then(() => {
+              this.getData();
             });
         }
       },
@@ -266,12 +269,12 @@
         if (this.$refs.articleForm.validate()) {
           if (this.editedIndex > -1) {
             articlesService.updateArticle(this.editedArticle)
-              .then((resolve) => {
+              .then(() => {
                 this.getData();
               });
           } else {
             articlesService.saveArticle(this.editedArticle)
-              .then((resolve) => {
+              .then(() => {
                 this.getData();
               });
           }

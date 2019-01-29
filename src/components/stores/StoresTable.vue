@@ -90,7 +90,7 @@
 </template>
 
 <script>
-  import storesService from '../../modules/stores/stores.service';
+  import storesService from '@/modules/stores/stores.service';
   import { VDataTable } from 'vuetify/es5/components/VDataTable';
 
   export default {
@@ -172,6 +172,10 @@
               this.loading = false;
               this.stores = items;
               this.totalStores = total;
+
+              if (total === 0) {
+                this.no_data = true;
+              }
             }
           })
           .catch(() => {
@@ -189,11 +193,10 @@
       },
 
       deleteItem (item) {
-        const index = this.stores.indexOf(item);
         if (confirm('Are you sure you want to delete this store?')) {
           storesService.deleteStore(item.id)
-            .then((resolve) => {
-              this.stores.splice(index, 1);
+            .then(() => {
+              this.getData();
             });
         }
       },
@@ -211,12 +214,12 @@
         if (this.$refs.storeForm.validate()) {
           if (this.editedIndex > -1) {
             storesService.updateStore(this.editedStore)
-              .then((resolve) => {
+              .then(() => {
                 this.getData();
               });
           } else {
             storesService.saveStore(this.editedStore)
-              .then((resolve) => {
+              .then(() => {
                 this.getData();
               });
           }

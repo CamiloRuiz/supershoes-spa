@@ -14,4 +14,3 @@ axiosConfig.defaults.timeout = process.env.NODE_ENV === 'production' ? 5000 : 10
 
 /** @constant { http } Axios instance for http request */
 export const http = axiosConfig.create();
-export default { http };

@@ -2,9 +2,27 @@ import { http } from '../network';
 
 export default {
 
+  endpoint: 'stores/',
+
   async getStores() {
     try {
-      const { data } = await http.get('stores');
+      const { data } = await http.get(this.endpoint);
+      return {
+        data: data,
+        error: false
+      };
+    } catch (err) {
+      throw {
+        data: [],
+        error: true,
+        message: err.response.data.message
+      }
+    }
+  },
+
+  async getStore(store) {
+    try {
+      const { data } = await http.get(this.endpoint + `${store}`);
       return {
         data: data,
         error: false
@@ -20,7 +38,7 @@ export default {
 
   async getArticles(store) {
     try {
-      const { data } = await http.get(`stores/${store}/articles`);
+      const { data } = await http.get(this.endpoint + `${store}/articles`);
       return {
         data: data,
         error: false
@@ -36,7 +54,7 @@ export default {
 
   async saveStore(data) {
     try {
-      const response = await http.post('stores', data);
+      const response = await http.post(this.endpoint, data);
       return {
         error: !response.data.success
       };
@@ -50,7 +68,7 @@ export default {
 
   async updateStore(data) {
     try {
-      const response = await http.put(`stores/${data.id}`, data);
+      const response = await http.put(this.endpoint + `${data.id}`, data);
       return {
         error: !response.data.success
       };
@@ -64,7 +82,7 @@ export default {
 
   async deleteStore(store) {
     try {
-      const response = await http.delete(`stores/${store}`);
+      const response = await http.delete(this.endpoint + `${store}`);
       return {
         error: !response.data.success
       };
